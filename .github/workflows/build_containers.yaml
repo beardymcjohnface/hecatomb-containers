@@ -1,0 +1,229 @@
+name: Build and Push Singularity Images
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - '**'
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - '**'
+
+jobs:
+  check-for-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      img_bbmap_changed: ${{ steps.filter.outputs.img_bbmap }}
+      img_canu_changed: ${{ steps.filter.outputs.img_canu }}
+      img_krona_changed: ${{ steps.filter.outputs.img_krona }}
+      img_megahit_changed: ${{ steps.filter.outputs.img_megahit }}
+      img_minimap2_changed: ${{ steps.filter.outputs.img_minimap2 }}
+      img_mmseqs2_changed: ${{ steps.filter.outputs.img_mmseqs2 }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get latest tag
+        id: get_tag
+        run: echo "LAST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+      - name: Check for changes in container recipes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          base: ${{ env.LAST_TAG }}
+          filters: |
+            img_bbmap:
+              - 'containers/hecatomb_bbmap_bedtools_pigz_flye'
+            img_canu:
+              - 'containers/hecatomb_canu'
+            img_krona:
+              - 'containers/hecatomb_krona_curl_zstd_pysam'
+            img_megahit:
+              - 'containers/hecatomb_megahit'
+            img_minimap2:
+              - 'containers/hecatomb_minimap2_samtools'
+            img_mmseqs2:
+              - 'containers/hecatomb_mmseqs2_seqkit_taxonkit_csvtk'
+
+
+  build-hecatomb_bbmap:
+      needs: check-for-changes
+      if: needs.check-for-changes.outputs.img_bbmap_changed == 'true'
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Install Apptainer
+          run: |
+            sudo apt update
+            sudo apt install -y software-properties-common
+            sudo add-apt-repository -y ppa:apptainer/ppa
+            sudo apt update
+            sudo apt install -y apptainer
+        - name: Get latest tag
+          id: get_tag
+          run: echo "LAST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        - name: Log in to Quay.io
+          run: |
+            echo "${{ secrets.QUAY_PASSWORD }}" | apptainer remote login --username "${{ secrets.QUAY_USERNAME }}" oras://quay.io
+        - name: Build hecatomb_bbmap_bedtools_pigz_flye
+          run: |
+            apptainer build hecatomb_bbmap_bedtools_pigz_flye.sif containers/hecatomb_bbmap_bedtools_pigz_flye
+        - name: Push hecatomb_bbmap_bedtools_pigz_flye to Quay.io
+          run: |
+            apptainer push hecatomb_bbmap_bedtools_pigz_flye.sif oras://quay.io/beardymcjohnface/hecatomb_bbmap_bedtools_pigz_flye:${{ env.LAST_TAG }}
+
+
+  build-hecatomb_canu:
+      needs: check-for-changes
+      if: needs.check-for-changes.outputs.img_canu_changed == 'true'
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Install Apptainer
+          run: |
+            sudo apt update
+            sudo apt install -y software-properties-common
+            sudo add-apt-repository -y ppa:apptainer/ppa
+            sudo apt update
+            sudo apt install -y apptainer
+        - name: Get latest tag
+          id: get_tag
+          run: echo "LAST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        - name: Log in to Quay.io
+          run: |
+            echo "${{ secrets.QUAY_PASSWORD }}" | apptainer remote login --username "${{ secrets.QUAY_USERNAME }}" oras://quay.io
+        - name: Build hecatomb_canu
+          run: |
+            apptainer build hecatomb_canu.sif containers/hecatomb_canu
+        - name: Push hecatomb_canuto Quay.io
+          run: |
+            apptainer push hecatomb_canu.sif oras://quay.io/beardymcjohnface/hecatomb_canu:${{ env.LAST_TAG }}
+
+
+  build-hecatomb_krona:
+      needs: check-for-changes
+      if: needs.check-for-changes.outputs.img_krona_changed == 'true'
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Install Apptainer
+          run: |
+            sudo apt update
+            sudo apt install -y software-properties-common
+            sudo add-apt-repository -y ppa:apptainer/ppa
+            sudo apt update
+            sudo apt install -y apptainer
+        - name: Get latest tag
+          id: get_tag
+          run: echo "LAST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        - name: Log in to Quay.io
+          run: |
+            echo "${{ secrets.QUAY_PASSWORD }}" | apptainer remote login --username "${{ secrets.QUAY_USERNAME }}" oras://quay.io
+        - name: Build hecatomb_krona_curl_zstd_pysam
+          run: |
+            apptainer build hecatomb_krona_curl_zstd_pysam.sif containers/hecatomb_krona_curl_zstd_pysam
+        - name: Push hecatomb_krona_curl_zstd_pysam to Quay.io
+          run: |
+            apptainer push hecatomb_krona_curl_zstd_pysam.sif oras://quay.io/beardymcjohnface/hecatomb_krona_curl_zstd_pysam:${{ env.LAST_TAG }}
+
+
+  build-hecatomb_megahit:
+      needs: check-for-changes
+      if: needs.check-for-changes.outputs.img_megahit_changed == 'true'
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Install Apptainer
+          run: |
+            sudo apt update
+            sudo apt install -y software-properties-common
+            sudo add-apt-repository -y ppa:apptainer/ppa
+            sudo apt update
+            sudo apt install -y apptainer
+        - name: Get latest tag
+          id: get_tag
+          run: echo "LAST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        - name: Log in to Quay.io
+          run: |
+            echo "${{ secrets.QUAY_PASSWORD }}" | apptainer remote login --username "${{ secrets.QUAY_USERNAME }}" oras://quay.io
+        - name: Build hecatomb_megahit
+          run: |
+            apptainer build hecatomb_megahit.sif containers/hecatomb_megahit
+        - name: Push hecatomb_megahit to Quay.io
+          run: |
+            apptainer push hecatomb_megahit.sif oras://quay.io/beardymcjohnface/hecatomb_megahit:${{ env.LAST_TAG }}
+
+
+  build-hecatomb_minimap2:
+      needs: check-for-changes
+      if: needs.check-for-changes.outputs.img_minimap2_changed == 'true'
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Install Apptainer
+          run: |
+            sudo apt update
+            sudo apt install -y software-properties-common
+            sudo add-apt-repository -y ppa:apptainer/ppa
+            sudo apt update
+            sudo apt install -y apptainer
+        - name: Get latest tag
+          id: get_tag
+          run: echo "LAST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        - name: Log in to Quay.io
+          run: |
+            echo "${{ secrets.QUAY_PASSWORD }}" | apptainer remote login --username "${{ secrets.QUAY_USERNAME }}" oras://quay.io
+        - name: Build hecatomb_minimap2_samtools
+          run: |
+            apptainer build hecatomb_minimap2_samtools.sif containers/hecatomb_minimap2_samtools
+        - name: Push hecatomb_minimap2_samtools to Quay.io
+          run: |
+            apptainer push hecatomb_minimap2_samtools.sif oras://quay.io/beardymcjohnface/hecatomb_minimap2_samtools:${{ env.LAST_TAG }}
+
+
+  build-hecatomb_mmseqs2:
+      needs: check-for-changes
+      if: needs.check-for-changes.outputs.img_mmseqs2_changed == 'true'
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Install Apptainer
+          run: |
+            sudo apt update
+            sudo apt install -y software-properties-common
+            sudo add-apt-repository -y ppa:apptainer/ppa
+            sudo apt update
+            sudo apt install -y apptainer
+        - name: Get latest tag
+          id: get_tag
+          run: echo "LAST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        - name: Log in to Quay.io
+          run: |
+            echo "${{ secrets.QUAY_PASSWORD }}" | apptainer remote login --username "${{ secrets.QUAY_USERNAME }}" oras://quay.io
+        - name: Build hecatomb_mmseqs2_seqkit_taxonkit_csvtk
+          run: |
+            apptainer build hecatomb_mmseqs2_seqkit_taxonkit_csvtk.sif containers/hecatomb_mmseqs2_seqkit_taxonkit_csvtk
+        - name: Push hecatomb_mmseqs2_seqkit_taxonkit_csvtk to Quay.io
+          run: |
+            apptainer push hecatomb_mmseqs2_seqkit_taxonkit_csvtk.sif oras://quay.io/beardymcjohnface/hecatomb_mmseqs2_seqkit_taxonkit_csvtk:${{ env.LAST_TAG }}
+
