@@ -1,0 +1,6 @@
+Bootstrap: docker
+
+From: continuumio/miniconda3
+
+%post
+    conda install -c bioconda -c conda-forge "python>=3.10" bbmap=38.90 "flye>=2.7" bedtools pigz
